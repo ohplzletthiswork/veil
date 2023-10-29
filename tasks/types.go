@@ -212,7 +212,6 @@ type Changes struct {
 		Create  []any `json:"create"`
 		Destroy []any `json:"destroy"`
 		Update  []struct {
-			BillHourInitial                    int    `json:"billHourInitial"`
 			RegistrationToDate                 any    `json:"registrationToDate"`
 			ErrorFlag                          string `json:"errorFlag"`
 			ReservedKey                        any    `json:"reservedKey"`
@@ -227,20 +226,20 @@ type Changes struct {
 				Description any    `json:"description"`
 				Level       any    `json:"level"`
 			} `json:"selectedLevel"`
-			CampusOverride                      string `json:"campusOverride"`
-			GradingMode                         string `json:"gradingMode"`
-			SelectedCreditHour                  any    `json:"selectedCreditHour"`
-			Block                               any    `json:"block"`
-			GradeComment                        any    `json:"gradeComment"`
-			CreditHourInitial                   int    `json:"creditHourInitial"`
-			SequenceNumber                      string `json:"sequenceNumber"`
-			CourseRegistrationStatusDescription string `json:"courseRegistrationStatusDescription"`
-			TuitionWaiverIndicator              string `json:"tuitionWaiverIndicator"`
-			RepeatOverride                      string `json:"repeatOverride"`
-			PreqOverride                        string `json:"preqOverride"`
-			CreditHour                          int    `json:"creditHour"`
-			MajorOverride                       string `json:"majorOverride"`
-			CourseReferenceNumber               string `json:"courseReferenceNumber"`
+			CampusOverride                      any `json:"campusOverride"`
+			GradingMode                         any `json:"gradingMode"`
+			SelectedCreditHour                  any `json:"selectedCreditHour"`
+			Block                               any `json:"block"`
+			GradeComment                        any `json:"gradeComment"`
+			CreditHourInitial                   any `json:"creditHourInitial"`
+			SequenceNumber                      any `json:"sequenceNumber"`
+			CourseRegistrationStatusDescription any `json:"courseRegistrationStatusDescription"`
+			TuitionWaiverIndicator              any `json:"tuitionWaiverIndicator"`
+			RepeatOverride                      any `json:"repeatOverride"`
+			PreqOverride                        any `json:"preqOverride"`
+			CreditHour                          any `json:"creditHour"`
+			MajorOverride                       any `json:"majorOverride"`
+			CourseReferenceNumber               any `json:"courseReferenceNumber"`
 			CreditHours                         struct {
 				Class               string `json:"class"`
 				CreditHourHigh      any    `json:"creditHourHigh"`
@@ -258,13 +257,13 @@ type Changes struct {
 			OriginalCourseRegistrationStatus     string `json:"originalCourseRegistrationStatus"`
 			RegistrationLevels                   []any  `json:"registrationLevels"`
 			AuthorizationCode                    any    `json:"authorizationCode"`
-			AttemptedHours                       int    `json:"attemptedHours"`
+			AttemptedHours                       any    `json:"attemptedHours"`
 			SelectedGradingMode                  struct {
 				Class       string `json:"class"`
 				Description any    `json:"description"`
 				GradingMode any    `json:"gradingMode"`
 			} `json:"selectedGradingMode"`
-			WaivHour                             int    `json:"waivHour"`
+			WaivHour                             any    `json:"waivHour"`
 			LevelDescription                     string `json:"levelDescription"`
 			SelectedStartEndDate                 any    `json:"selectedStartEndDate"`
 			SelectedOverride                     any    `json:"selectedOverride"`
@@ -295,7 +294,7 @@ type Changes struct {
 			RecordStatus              string `json:"recordStatus"`
 			NumberOfUnits             any    `json:"numberOfUnits"`
 			ScheduleDescription       string `json:"scheduleDescription"`
-			TimeStatusHours           int    `json:"timeStatusHours"`
+			TimeStatusHours           any    `json:"timeStatusHours"`
 			SelectedBillHour          any    `json:"selectedBillHour"`
 			GradeDate                 any    `json:"gradeDate"`
 			RegistrationActions       []struct {
@@ -312,7 +311,7 @@ type Changes struct {
 			StatusIndicator                     string            `json:"statusIndicator"`
 			Subject                             string            `json:"subject"`
 			RemoveIndicator                     any               `json:"removeIndicator"`
-			BillHour                            int               `json:"billHour"`
+			BillHour                            any               `json:"billHour"`
 			PartOfTerm                          string            `json:"partOfTerm"`
 			SectionCourseTitle                  string            `json:"sectionCourseTitle"`
 			OverrideDurationIndicator           bool              `json:"overrideDurationIndicator"`
@@ -370,7 +369,7 @@ type Changes struct {
 			PermitOverrideUpdate            any    `json:"permitOverrideUpdate"`
 			VoiceResponseStatusType         string `json:"voiceResponseStatusType"`
 			RegistrationStudyPaths          []any  `json:"registrationStudyPaths"`
-			ID                              int    `json:"id"`
+			ID                              any    `json:"id"`
 			Messages                        []struct {
 				Message string `json:"message"`
 				Type    string `json:"type"`
