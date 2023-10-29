@@ -36,7 +36,7 @@ For the tool to function correctly, a `.env` file is required with the following
 | YEAR           | Target academic year                                | `YEAR=2024`              |
 | QUARTER        | Target academic quarter                             | `QUARTER=WINTER`        |
 | CAMPUS         | Campus code (either DA or FH)                       | `CAMPUS=DA`             |
-| CRNTOADD       | Course Reference Number for enrollment (SIGNUP mode)| `CRNTOADD=00000`        |
+| CRNTOADD       | Course Reference Numbers for enrollment (SIGNUP mode) seperated by comma | `CRNTOADD=00000,00001`        |
 | RETRY_AMOUNT   | Max number of retry attempts                        | `RETRY_AMOUNT=2`        |
 | RETRY_DURATION | Duration to wait between retries (in seconds)       | `RETRY_DURATION=2`      |
 | DISCORD_WEBHOOK| Discord notification webhook                        |                         |
