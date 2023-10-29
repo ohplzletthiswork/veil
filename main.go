@@ -86,6 +86,8 @@ func main() {
 		if err := transcript.Run(); err != nil {
 			fmt.Println(err)
 		}
+	} else {
+		fmt.Println("Invalid mode selected")
 	}
 	for {
 		time.Sleep(time.Second)
