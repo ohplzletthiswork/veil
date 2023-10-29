@@ -28,7 +28,7 @@ func main() {
 	year := os.Getenv("YEAR")
 	quarter := strings.ToLower(os.Getenv("QUARTER"))
 	campus := strings.ToLower(os.Getenv("CAMPUS"))
-	crntoadd := os.Getenv("CRNTOADD")
+	crntoadd := os.Getenv("CRNSTOADD")
 	retryamount := os.Getenv("RETRY_AMOUNT")
 	retryduration := os.Getenv("RETRY_DURATION")
 	webhookURL := os.Getenv("DISCORD_WEBHOOK")
@@ -51,7 +51,7 @@ func main() {
 
 	t.RetryAmount = retryAmount
 	t.RetryDuration = time.Duration(retryDuration * int(time.Second))
-	t.CourseNumber = crntoadd
+	t.CoursesToAdd = strings.Split(crntoadd, ",")
 	t.WebhookURL = webhookURL
 
 	if mode == "SEARCH" || mode == "SIGNUP" {

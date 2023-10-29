@@ -16,7 +16,7 @@ type Task struct {
 	Subject       string
 	Term          string
 	TermId        string
-	CourseNumber  string
+	CoursesToAdd  []string
 	Client        tls_client.HttpClient
 	UserAgent     string
 	RetryDuration time.Duration

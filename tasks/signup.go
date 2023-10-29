@@ -477,12 +477,12 @@ func (s *SignupTask) GetEvents() error {
 	return nil
 }
 
-func (s *SignupTask) AddCourse() error {
+func (s *SignupTask) AddCourse(CourseNumber string) error {
 	fmt.Println("Adding course")
 
 	url := fmt.Sprintf(
 		"https://reg-prod.ec.fhda.edu/StudentRegistrationSsb/ssb/classRegistration/addRegistrationItem?term=%s&courseReferenceNumber=%s&olr=false",
-		s.task.TermId, s.task.CourseNumber,
+		s.task.TermId, CourseNumber,
 	)
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -524,6 +524,15 @@ func (s *SignupTask) AddCourse() error {
 	return nil
 }
 
+func (s *SignupTask) AddCourses() error {
+	fmt.Println("Adding courses")
+
+	for _, course := range s.task.CoursesToAdd {
+		s.AddCourse(course)
+	}
+	return nil
+}
+
 func (s *SignupTask) SubmitChanges() error {
 	fmt.Println("Submitting changes")
 
@@ -556,7 +565,6 @@ func (s *SignupTask) SubmitChanges() error {
 	if err != nil {
 		return FailedToReadResponseBody
 	}
-
 	changes := Changes{}
 	if err := json.Unmarshal(body, &changes); err != nil {
 		fmt.Println(err)
@@ -564,19 +572,20 @@ func (s *SignupTask) SubmitChanges() error {
 	}
 
 	for _, data := range changes.Data.Update {
-		if data.CourseReferenceNumber == s.task.CourseNumber {
-			fmt.Println(data.CourseTitle)
-			if len(data.CrnErrors) > 0 || data.StatusDescription == "Errors Preventing Registration" {
-				for _, error := range data.CrnErrors {
-					fmt.Printf("Error received: %s\n", error.Message)
+		for _, course := range s.task.CoursesToAdd {
+			if data.CourseReferenceNumber == course {
+				if len(data.CrnErrors) > 0 || data.StatusDescription == "Errors Preventing Registration" {
+					fmt.Printf("%d Errors encountered while adding %s - %s\n", len(data.CrnErrors), data.CourseReferenceNumber, data.CourseTitle)
+					for _, error := range data.CrnErrors {
+						fmt.Printf("Error received: %s\n", error.Message)
+					}
 				}
-				return FailedSubmittingChangesCRNErrors
-			}
 
-			if data.StatusDescription == "Registered" {
-				fmt.Printf("Successfully registered for %s\n", data.CourseTitle)
-				s.task.sendSuccessfulEnrollmentNotification(data.CourseTitle)
-				return nil
+				if data.StatusDescription == "Registered" {
+					fmt.Printf("Successfully registered for %s - %s\n", data.CourseReferenceNumber, data.CourseTitle)
+					s.task.sendSuccessfulEnrollmentNotification(data.CourseTitle)
+					return nil
+				}
 			}
 		}
 	}
@@ -597,7 +606,7 @@ func (s *SignupTask) Run() error {
 		s.GetRegistrationStatus,
 		s.VisitClassRegistration,
 		s.GetEvents,
-		s.AddCourse,
+		s.AddCourses,
 		s.SubmitChanges,
 	}
 
