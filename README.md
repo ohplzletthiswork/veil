@@ -55,7 +55,7 @@ To compile the program, run compile.sh
 
 Based on the `MODE` set in the `.env` file:
 
-- **SIGNUP**: Enroll in the class with the specified CRN.
+- **SIGNUP**: Enroll in classes given the Course Reference Numbers.
 - **SEARCH**: Search for classes based on the given term, section, and subject.
 - **EXPORT**: Export details of all previously enrolled courses.
 
