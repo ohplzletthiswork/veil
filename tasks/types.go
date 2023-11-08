@@ -14,6 +14,7 @@ var (
 	FailedToCreateRequest            = errors.New("Failed to create Request")
 	FailedToMakeRequest              = errors.New("Failed to make Request")
 	FailedToReadResponseBody         = errors.New("Failed to read Response body")
+	UnknownHTTPResponseStatus        = errors.New("Unknown HTTP response")
 	UnableToParseJSON                = errors.New("Unable to parse JSON")
 	UnableToGetDocument              = errors.New("Unable to get document")
 	CourseSearchUnsuccessful         = errors.New("Course search unsuccessful")

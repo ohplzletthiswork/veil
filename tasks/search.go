@@ -5,7 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/url"
 	"os"
 	"strconv"
@@ -40,7 +40,11 @@ func (s *SearchTask) SearchForTerm() error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != 200 {
+		return UnknownHTTPResponseStatus
+	}
+
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return FailedToReadResponseBody
 	}
@@ -61,6 +65,7 @@ func (s *SearchTask) GetCourses() error {
 	if err != nil {
 		return FailedToCreateRequest
 	}
+
 	request.Header.Set("accept", "*/*")
 	request.Header.Set("user-agent", s.task.UserAgent)
 
@@ -70,7 +75,11 @@ func (s *SearchTask) GetCourses() error {
 	}
 	defer resp.Body.Close()
 
-	readBytes, err := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != 200 {
+		return UnknownHTTPResponseStatus
+	}
+
+	readBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return FailedToReadResponseBody
 	}
@@ -81,7 +90,7 @@ func (s *SearchTask) GetCourses() error {
 		return UnableToParseJSON
 	}
 
-	if coursesResponse.Success == false {
+	if !coursesResponse.Success {
 		return CourseSearchUnsuccessful
 	}
 

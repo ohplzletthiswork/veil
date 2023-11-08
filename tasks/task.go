@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"strconv"
 	"time"
 
@@ -54,7 +54,12 @@ func (task *Task) SearchTerm() (string, error) {
 		return "", FailedToMakeRequest
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != 200 {
+		return "", UnknownHTTPResponseStatus
+	}
+
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", FailedToReadResponseBody
 	}
@@ -149,7 +154,7 @@ func formatDuration(time time.Duration) string {
 
 func (task *Task) sendSuccessfulEnrollmentNotification(CourseTitle string) error {
 
-	if len(task.WebhookURL) < 0 {
+	if len(task.WebhookURL) == 0 {
 		return NoWebHookURL
 	}
 	now := time.Now().UTC()

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/url"
 	"os"
 	"strings"
@@ -47,7 +47,7 @@ func (t *TranscriptTask) VisitHomepage() error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return FailedToReadResponseBody
 	}
@@ -75,7 +75,7 @@ func (t *TranscriptTask) Login() error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return FailedToReadResponseBody
 	}
@@ -88,12 +88,15 @@ func (t *TranscriptTask) Login() error {
 	document.Find("div[class='alert alert-danger']").Each(func(index int, element *goquery.Selection) {
 		message = strings.TrimSpace(element.Text())
 	})
-	if len(message) > 0 {
-		if message == "The password you entered was incorrect." {
-			return InvalidCredentials
-		} else if message == "You may be seeing this page because you used the Back button while browsing a secure web site or application. Alternatively, you may have mistakenly bookmarked the web login form instead of the actual web site you wanted to bookmark or used a link created by somebody else who made the same mistake.  Left unchecked, this can cause errors on some browsers or result in you returning to the web site you tried to leave, so this page is presented instead." {
-			return SessionCorrupted
-		}
+
+	switch message {
+	case "The password you entered was incorrect.":
+		return InvalidCredentials
+	case "You may be seeing this page because you used the Back button while browsing a secure web site or application. Alternatively, you may have mistakenly bookmarked the web login form instead of the actual web site you wanted to bookmark or used a link created by somebody else who made the same mistake.  Left unchecked, this can cause errors on some browsers or result in you returning to the web site you tried to leave, so this page is presented instead.":
+		return SessionCorrupted
+	case "":
+		break
+	default:
 		return errors.New(message)
 	}
 
@@ -145,7 +148,7 @@ func (t *TranscriptTask) SubmitCommonAuth() error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return FailedToReadResponseBody
 	}
@@ -194,7 +197,7 @@ func (t *TranscriptTask) SubmitSSO() error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return FailedToReadResponseBody
 	}
@@ -220,7 +223,7 @@ func (t *TranscriptTask) GetUserInfo() error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return FailedToReadResponseBody
 	}
@@ -265,7 +268,7 @@ func (t *TranscriptTask) GetAudit() error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return FailedToReadResponseBody
 	}
