@@ -3,11 +3,8 @@ package tasks
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
 	"net/url"
 	"regexp"
 	"strings"
@@ -59,8 +56,10 @@ func (s *SignupTask) VisitHomepage() error {
 func (s *SignupTask) Login() error {
 	fmt.Println("Logging in")
 
+	s.task.LoginAttempts++
+
 	loginData := fmt.Sprintf("j_username=%s&j_password=%s&_eventId_proceed=", s.task.Username, s.task.Password)
-	request, err := http.NewRequest(http.MethodPost, "https://ssoshib.fhda.edu/idp/profile/SAML2/Redirect/SSO?execution=e1s1", bytes.NewBufferString(loginData))
+	request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("https://ssoshib.fhda.edu/idp/profile/SAML2/Redirect/SSO?execution=e1s%d", s.task.LoginAttempts), bytes.NewBufferString(loginData))
 	if err != nil {
 		return FailedToCreateRequest
 	}
@@ -93,15 +92,8 @@ func (s *SignupTask) Login() error {
 		message = strings.TrimSpace(element.Text())
 	})
 
-	switch message {
-	case "The password you entered was incorrect.":
-		return InvalidCredentials
-	case "You may be seeing this page because you used the Back button while browsing a secure web site or application. Alternatively, you may have mistakenly bookmarked the web login form instead of the actual web site you wanted to bookmark or used a link created by somebody else who made the same mistake.  Left unchecked, this can cause errors on some browsers or result in you returning to the web site you tried to leave, so this page is presented instead.":
-		return SessionCorrupted
-	case "":
-		break
-	default:
-		return errors.New(message)
+	if err := s.task.handleLoginMessage(message); err != nil {
+		return err
 	}
 
 	relayStateValue := ""
@@ -153,7 +145,7 @@ func (s *SignupTask) SubmitCommonAuth() error {
 	if resp.StatusCode != 200 {
 		return UnknownHTTPResponseStatus
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return FailedToReadResponseBody
 	}
@@ -368,12 +360,15 @@ func (s *SignupTask) SaveTerm() error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return FailedToReadResponseBody
 	}
 
 	if len(body) > 0 {
+		if !strings.Contains(string(body), s.task.TermId) {
+			return FailedSavingTerm
+		}
 	}
 	return nil
 }
@@ -401,14 +396,14 @@ func (s *SignupTask) GetRegistrationStatus() error {
 		return UnknownHTTPResponseStatus
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return FailedToReadResponseBody
 	}
 
 	registrationStatus := RegistrationStatus{}
 	if err := json.Unmarshal(body, &registrationStatus); err != nil {
-		log.Println(err)
+		fmt.Println(err)
 		return UnableToParseJSON
 	}
 	if len(registrationStatus.StudentEligFailures) > 0 {
@@ -440,9 +435,11 @@ func (s *SignupTask) GetRegistrationStatus() error {
 
 					resumeDate := now.Add(timeToWait)
 					fmt.Printf("Will continue after: %s\n", resumeDate.Format("2006-01-02 03:04:05 -0700 MST"))
-					fmt.Printf("Waiting %s to continue\n", formatDuration(timeToWait))
+					fmt.Printf("Waiting %s or %s to continue\n", formatDuration(timeToWait), timeToWait)
 					time.Sleep(timeToWait)
+					return s.GetRegistrationStatus()
 				} else {
+					fmt.Println("Past registration time")
 				}
 			}
 		} else {
@@ -480,36 +477,6 @@ func (s *SignupTask) VisitClassRegistration() error {
 	return nil
 }
 
-func (s *SignupTask) GetEvents() error {
-	fmt.Println("Getting events")
-
-	request, err := http.NewRequest(http.MethodGet, "https://reg-prod.ec.fhda.edu/StudentRegistrationSsb/ssb/classRegistration/getRegistrationEvents?termFilter=null", nil)
-	if err != nil {
-		return FailedToCreateRequest
-	}
-	request.Header.Add("accept", "*/*")
-	request.Header.Add("accept-language", "en-US,en;q=0.9")
-	request.Header.Add("user-agent", s.task.UserAgent)
-
-	resp, err := s.task.Client.Do(request)
-	if err != nil {
-		return FailedToMakeRequest
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return UnknownHTTPResponseStatus
-	}
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return FailedToReadResponseBody
-	}
-
-	if len(body) > 0 {
-	}
-	return nil
-}
-
 func (s *SignupTask) AddCourse(CourseNumber string) error {
 	fmt.Println("Adding course")
 
@@ -542,13 +509,13 @@ func (s *SignupTask) AddCourse(CourseNumber string) error {
 
 	addCourse := AddCourse{}
 	if err := json.Unmarshal(body, &addCourse); err != nil {
-		log.Println(err)
+		fmt.Println(err)
 		return UnableToParseJSON
 	}
 	if addCourse.Success {
 		dataModel, err := extractModel([]byte(body))
 		if err != nil {
-			log.Println(err)
+			fmt.Println(err)
 			return UnableToParseJSON
 		}
 		s.Model = dataModel
@@ -625,7 +592,6 @@ func (s *SignupTask) SubmitChanges() error {
 				if data.StatusDescription == "Registered" {
 					fmt.Printf("Successfully registered for %s - %s\n", data.CourseReferenceNumber, data.CourseTitle)
 					s.task.sendSuccessfulEnrollmentNotification(data.CourseTitle)
-					return nil
 				}
 			}
 		}
@@ -646,7 +612,6 @@ func (s *SignupTask) Run() error {
 		s.SaveTerm,
 		s.GetRegistrationStatus,
 		s.VisitClassRegistration,
-		s.GetEvents,
 		s.AddCourses,
 		s.SubmitChanges,
 	}

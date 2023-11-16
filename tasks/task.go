@@ -3,6 +3,7 @@ package tasks
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -24,6 +25,7 @@ type Task struct {
 	Username      string
 	Password      string
 	WebhookURL    string
+	LoginAttempts int
 }
 
 func BuildTermId(year int, campus string, quarter string) (string, error) {
@@ -150,6 +152,22 @@ func formatDuration(time time.Duration) string {
 	seconds := totalSeconds % 60
 
 	return fmt.Sprintf("%dd %dh %dm %ds", days, hours, minutes, seconds)
+}
+
+func (task *Task) handleLoginMessage(Message string) error {
+	switch Message {
+	case "The username you entered cannot be identified.":
+		return UserNameNotFound
+	case "The password you entered was incorrect.":
+		return InvalidCredentials
+	case "You may be seeing this page because you used the Back button while browsing a secure web site or application. Alternatively, you may have mistakenly bookmarked the web login form instead of the actual web site you wanted to bookmark or used a link created by somebody else who made the same mistake.  Left unchecked, this can cause errors on some browsers or result in you returning to the web site you tried to leave, so this page is presented instead.":
+		return SessionCorrupted
+	case "":
+		break
+	default:
+		return errors.New(Message)
+	}
+	return nil
 }
 
 func (task *Task) sendSuccessfulEnrollmentNotification(CourseTitle string) error {

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/csv"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -59,8 +58,11 @@ func (t *TranscriptTask) VisitHomepage() error {
 
 func (t *TranscriptTask) Login() error {
 	fmt.Println("Logging in")
+
+	t.task.LoginAttempts++
+
 	loginData := fmt.Sprintf("j_username=%s&j_password=%s&_eventId_proceed=", t.task.Username, t.task.Password)
-	request, err := http.NewRequest(http.MethodPost, "https://ssoshib.fhda.edu/idp/profile/SAML2/Redirect/SSO?execution=e1s1", bytes.NewBufferString(loginData))
+	request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("https://ssoshib.fhda.edu/idp/profile/SAML2/Redirect/SSO?execution=e1s%d", t.task.LoginAttempts), bytes.NewBufferString(loginData))
 	if err != nil {
 		return FailedToCreateRequest
 	}
@@ -89,15 +91,8 @@ func (t *TranscriptTask) Login() error {
 		message = strings.TrimSpace(element.Text())
 	})
 
-	switch message {
-	case "The password you entered was incorrect.":
-		return InvalidCredentials
-	case "You may be seeing this page because you used the Back button while browsing a secure web site or application. Alternatively, you may have mistakenly bookmarked the web login form instead of the actual web site you wanted to bookmark or used a link created by somebody else who made the same mistake.  Left unchecked, this can cause errors on some browsers or result in you returning to the web site you tried to leave, so this page is presented instead.":
-		return SessionCorrupted
-	case "":
-		break
-	default:
-		return errors.New(message)
+	if err := t.task.handleLoginMessage(message); err != nil {
+		return err
 	}
 
 	relayStateValue := ""
@@ -234,13 +229,17 @@ func (t *TranscriptTask) GetUserInfo() error {
 			fmt.Println(err)
 			return UnableToParseJSON
 		}
-		for _, student := range userInfo.Embedded.Students {
-			t.Name = student.Name
-			t.UserId = student.ID
-			t.SchoolKey = student.Goals[0].School.Key
-			t.SchoolDescription = student.Goals[0].School.Description
-			t.Degree = student.Goals[0].Degree.Key
-			t.DegreeDescription = student.Goals[0].Degree.Description
+		if len(userInfo.Embedded.Students) > 0 {
+			for _, student := range userInfo.Embedded.Students {
+				t.Name = student.Name
+				t.UserId = student.ID
+				t.SchoolKey = student.Goals[0].School.Key
+				t.SchoolDescription = student.Goals[0].School.Description
+				t.Degree = student.Goals[0].Degree.Key
+				t.DegreeDescription = student.Goals[0].Degree.Description
+			}
+		} else {
+			return NoStudentsFound
 		}
 	}
 	return nil

@@ -47,7 +47,13 @@ func main() {
 	t.Subject = subject
 
 	retryAmount, err := strconv.Atoi(retryamount)
+	if err != nil {
+		fmt.Println(err)
+	}
 	retryDuration, err := strconv.Atoi(retryduration)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	t.RetryAmount = retryAmount
 	t.RetryDuration = time.Duration(retryDuration * int(time.Second))
@@ -69,26 +75,34 @@ func main() {
 		} else {
 			fmt.Printf("Found term: %s\n", termDesc)
 		}
+	}
 
-		if mode == "SEARCH" {
+	switch mode {
+	case "SEARCH":
+		{
 			search := tasks.NewSearchTask(t)
 			if err := search.Run(); err != nil {
 				fmt.Println(err)
 			}
-		} else if mode == "SIGNUP" {
+		}
+	case "SIGNUP":
+		{
 			signup := tasks.NewSignupTask(t)
 			if err := signup.Run(); err != nil {
 				fmt.Println(err)
 			}
 		}
-	} else if mode == "TRANSCRIPT" {
-		transcript := tasks.NewTranscriptTask(t)
-		if err := transcript.Run(); err != nil {
-			fmt.Println(err)
+	case "TRANSCRIPT":
+		{
+			transcript := tasks.NewTranscriptTask(t)
+			if err := transcript.Run(); err != nil {
+				fmt.Println(err)
+			}
 		}
-	} else {
+	default:
 		fmt.Println("Invalid mode selected")
 	}
+
 	for {
 		time.Sleep(time.Second)
 	}

@@ -21,6 +21,7 @@ var (
 	FailedToVisitHomepage            = errors.New("Failed to visit homepage")
 	SessionCorrupted                 = errors.New("Session corrupted")
 	FailedToLogin                    = errors.New("Failed to login")
+	UserNameNotFound                 = errors.New("Username not found")
 	InvalidCredentials               = errors.New("Invalid credentials")
 	FailedSubmittingSSO              = errors.New("Failed to submit SSO")
 	FailedSubmittingCommonAuth       = errors.New("Failed submitting common auth")
@@ -40,6 +41,7 @@ var (
 	MaximumAttemptsRetry             = errors.New("Maximum attempts at retrying has been reached")
 	FailedToSendNotification         = errors.New("Failed to send discord notification")
 	NoSamlResponseValue              = errors.New("No SAML Response value")
+	NoStudentsFound                  = errors.New("No students found")
 )
 
 var QuarterCodes = map[string]int{
